@@ -28,9 +28,11 @@ class ImportCommandController extends AbstractCommandController
      * @param string $icsCalendarUri
      * @param int $pid
      * @param bool $deleteBeforeImport Deletes all Events on same page before importing: Per default they get updated or newly created based on their imported and local uid. With this option All Events will get new created.
+     * @param bool $verbose
      */
-    public function importCommand($icsCalendarUri = null, $pid = null, $deleteBeforeImport = false)
+    public function importCommand($icsCalendarUri = null, $pid = null, $deleteBeforeImport = false, $verboseLogging = false)
     {
+        $this->verboseLogging = $verboseLogging;
         if (null === $icsCalendarUri || !\filter_var($icsCalendarUri, FILTER_VALIDATE_URL)) {
             $this->enqueueMessage('You have to enter a valid URL to the iCalendar ICS', 'Error', FlashMessage::ERROR);
 
@@ -54,7 +56,7 @@ class ImportCommandController extends AbstractCommandController
 
 
         // fetch external URI and write to file
-        $this->enqueueMessage('Start to checkout the calendar: ' . $icsCalendarUri, 'Calendar', FlashMessage::INFO);
+        $this->log('Start to checkout the calendar: ' . $icsCalendarUri, 'Calendar', FlashMessage::INFO);
         $relativeIcalFile = 'typo3temp/ical.' . GeneralUtility::shortMD5($icsCalendarUri) . '.ical';
         $absoluteIcalFile = GeneralUtility::getFileAbsFileName($relativeIcalFile);
         $content = GeneralUtility::getUrl($icsCalendarUri);
@@ -62,12 +64,12 @@ class ImportCommandController extends AbstractCommandController
 
         // get Events from file
         $icalEvents = $this->getIcalEvents($absoluteIcalFile);
-        $this->enqueueMessage('Found ' . \count($icalEvents) . ' events in the given calendar', 'Items', FlashMessage::INFO);
+        $this->log('Found ' . \count($icalEvents) . ' events in the given calendar', 'Items', FlashMessage::INFO);
         $events = $this->prepareEvents($icalEvents);
 
-        $this->enqueueMessage('Found ' . \count($events) . ' events in ' . $icsCalendarUri, 'Items', FlashMessage::INFO);
+        $this->log('Found ' . \count($events) . ' events in ' . $icsCalendarUri, 'Items', FlashMessage::INFO);
 
-        $this->enqueueMessage('Send the ' . __CLASS__ . '::importCommand signal for each event.', 'Signal', FlashMessage::INFO);
+        $this->log('Send the ' . __CLASS__ . '::importCommand signal for each event.', 'Signal', FlashMessage::INFO);
         foreach ($events as $event) {
             $arguments = [
                 'event' => $event,
@@ -78,9 +80,11 @@ class ImportCommandController extends AbstractCommandController
             $signalSlotDispatcher->dispatch(__CLASS__, 'importCommand', $arguments);
         }
 
-        $this->enqueueMessage('Run Reindex proces after import', 'Reindex', FlashMessage::INFO);
+        $this->log('Run Reindex proces after import', 'Reindex', FlashMessage::INFO);
         $indexer = $this->objectManager->get(IndexerService::class);
         $indexer->reindexAll();
+
+        $this->enqueueMessage(implode(PHP_EOL,$this->getLog()), 'Log', FlashMessage::INFO);
     }
 
     /**

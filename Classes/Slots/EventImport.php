@@ -80,7 +80,7 @@ class EventImport
      */
     public function importCommand(array $event, $commandController, $pid, $handled)
     {
-        $commandController->enqueueMessage('Handle via Default Event Import Slot');
+        $commandController->log('Handle via Default Event Import Slot');
 
         $eventObject = $this->getEvent($event['uid']);
         $eventObject->setPid($pid);
@@ -93,10 +93,10 @@ class EventImport
 
         if (null !== $eventObject->getUid() && (int)$eventObject->getUid() > 0) {
             $this->eventRepository->update($eventObject);
-            $commandController->enqueueMessage('Update Event Meta data: ' . $eventObject->getTitle(), 'Update');
+            $commandController->log('Update Event Meta data: ' . $eventObject->getTitle(), 'Update');
         } else {
             $this->eventRepository->add($eventObject);
-            $commandController->enqueueMessage('Add Event: ' . $eventObject->getTitle(), 'Add');
+            $commandController->log('Add Event: ' . $eventObject->getTitle(), 'Add');
         }
 
         $this->persist();

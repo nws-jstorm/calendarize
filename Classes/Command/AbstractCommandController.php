@@ -25,6 +25,16 @@ abstract class AbstractCommandController extends CommandController
     protected $flashMessageService;
 
     /**
+     * @var array
+     */
+    protected $log = [];
+
+    /**
+     * @var bool
+     */
+    public $verboseLogging = false;
+
+    /**
      * Inject flash message service.
      *
      * @param \TYPO3\CMS\Core\Messaging\FlashMessageService $flashMessageService
@@ -61,6 +71,17 @@ abstract class AbstractCommandController extends CommandController
         } else {
             $this->enqueueMessageGui($message, $title, $severity);
         }
+    }
+
+    public function log($message, $title = '', $severity = FlashMessage::INFO) {
+        $this->log[] = '['.$title.'] '.$message;
+        if($this->verboseLogging) {
+            $this->enqueueMessage($message, $title, $severity);
+        }
+    }
+
+    public function getLog() {
+        return $this->log;
     }
 
     /**
