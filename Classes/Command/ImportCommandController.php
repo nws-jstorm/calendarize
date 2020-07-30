@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace HDNET\Calendarize\Command;
 
 use HDNET\Calendarize\Service\IndexerService;
+use HDNET\Calendarize\Utility\DateTimeUtility;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -80,13 +81,17 @@ class ImportCommandController extends AbstractCommandController
     protected function prepareEvents(array $icalEvents)
     {
         $events = [];
+        $timezone = DateTimeUtility::getTimeZone();
+
         foreach ($icalEvents as $icalEvent) {
             $startDateTime = null;
             $endDateTime = null;
             try {
                 $startDateTime = new \DateTime($icalEvent['DTSTART']);
+                $startDateTime->setTimezone($timezone);
                 if ($icalEvent['DTEND']) {
                     $endDateTime = new \DateTime($icalEvent['DTEND']);
+                    $endDateTime->setTimezone($timezone);
                 } else {
                     $endDateTime = clone $startDateTime;
                     $endDateTime->add(new \DateInterval($icalEvent['DURATION']));
