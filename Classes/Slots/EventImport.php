@@ -38,6 +38,35 @@ class EventImport
     }
 
     /**
+     * Deletes all events with given pid
+     *
+     * @param int $pid
+     * @param int $removed
+     * @param int $kept
+     * @return array
+     * @throws \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException
+     */
+    public function deleteCommand($pid, $removed, $kept) {
+        $events = $this->eventRepository->findByPid($pid);
+
+        foreach ($events as $event) {
+            /** @var $event Event */
+            if($event->getPid() == $pid) {
+                $removed++;
+                $this->eventRepository->remove($event);
+            } else {
+                $kept++;
+            }
+        }
+        $this->persist();
+        return [
+            'pid' => $pid,
+            'removed' => $removed,
+            'kept' => $kept
+        ];
+    }
+
+    /**
      * Run the import.
      *
      * @param array                   $event

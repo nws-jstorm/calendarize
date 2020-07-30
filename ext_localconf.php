@@ -19,6 +19,12 @@ if (!(bool) \HDNET\Calendarize\Utility\ConfigurationUtility::get('disableDefault
         \HDNET\Calendarize\Slots\EventImport::class,
         'importCommand'
     );
+    $signalSlotDispatcher->connect(
+        \HDNET\Calendarize\Command\ImportCommandController::class,
+        'deleteCommand',
+        \HDNET\Calendarize\Slots\EventImport::class,
+        'deleteCommand'
+    );
 
     $signalSlotDispatcher->connect(
         \HDNET\Calendarize\Controller\BookingController::class,

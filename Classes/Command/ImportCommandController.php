@@ -7,7 +7,9 @@ declare(strict_types=1);
 
 namespace HDNET\Calendarize\Command;
 
+use HDNET\Calendarize\Domain\Repository\EventRepository;
 use HDNET\Calendarize\Service\IndexerService;
+use HDNET\Calendarize\Utility\ConfigurationUtility;
 use HDNET\Calendarize\Utility\DateTimeUtility;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -24,9 +26,10 @@ class ImportCommandController extends AbstractCommandController
      * Import command.
      *
      * @param string $icsCalendarUri
-     * @param int    $pid
+     * @param int $pid
+     * @param bool $deleteBeforeImport Deletes all Events on same page before importing: Per default they get updated or newly created based on their imported and local uid. With this option All Events will get new created.
      */
-    public function importCommand($icsCalendarUri = null, $pid = null)
+    public function importCommand($icsCalendarUri = null, $pid = null, $deleteBeforeImport = false)
     {
         if (null === $icsCalendarUri || !\filter_var($icsCalendarUri, FILTER_VALIDATE_URL)) {
             $this->enqueueMessage('You have to enter a valid URL to the iCalendar ICS', 'Error', FlashMessage::ERROR);
@@ -38,6 +41,17 @@ class ImportCommandController extends AbstractCommandController
 
             return;
         }
+
+        $signalSlotDispatcher = GeneralUtility::makeInstance(Dispatcher::class);
+        if($deleteBeforeImport) {
+            $result = $signalSlotDispatcher->dispatch(__CLASS__, 'deleteCommand', [$pid,0,0]);
+            if($result['removed'] > 0) {
+                $this->enqueueMessage('Removed '.$result['removed'].' and kept '.$result['kept'].' of all Events before importing. (With other pid)', 'Delete Statistic', FlashMessage::INFO);
+            } else {
+                $this->enqueueMessage('Nothing to remove. Kept '.$result['kept'].' of all Events before importing. (With other pid)', 'Delete Statistic', FlashMessage::INFO);
+            }
+        }
+
 
         // fetch external URI and write to file
         $this->enqueueMessage('Start to checkout the calendar: ' . $icsCalendarUri, 'Calendar', FlashMessage::INFO);
@@ -52,8 +66,6 @@ class ImportCommandController extends AbstractCommandController
         $events = $this->prepareEvents($icalEvents);
 
         $this->enqueueMessage('Found ' . \count($events) . ' events in ' . $icsCalendarUri, 'Items', FlashMessage::INFO);
-
-        $signalSlotDispatcher = GeneralUtility::makeInstance(Dispatcher::class);
 
         $this->enqueueMessage('Send the ' . __CLASS__ . '::importCommand signal for each event.', 'Signal', FlashMessage::INFO);
         foreach ($events as $event) {

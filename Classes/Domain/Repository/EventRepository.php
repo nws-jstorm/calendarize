@@ -59,6 +59,22 @@ class EventRepository extends AbstractRepository
     }
 
     /**
+     * @param $pid
+     *
+     * @return mixed|null
+     */
+    public function findByPid($pid)
+    {
+        $query = $this->createQuery();
+        $query->getQuerySettings()->setRespectStoragePage(false);
+        $query->getQuerySettings()->setIgnoreEnableFields(true);
+        $query->matching($query->equals('pid', $pid));
+        $result = $query->execute()->toArray();
+
+        return $result ?? [];
+    }
+
+    /**
      * Return the current tablename.
      *
      * @return string
