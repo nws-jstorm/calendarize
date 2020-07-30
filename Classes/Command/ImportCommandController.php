@@ -28,7 +28,7 @@ class ImportCommandController extends AbstractCommandController
      * @param string $icsCalendarUri
      * @param int $pid
      * @param bool $deleteBeforeImport Deletes all Events on same page before importing: Per default they get updated or newly created based on their imported and local uid. With this option All Events will get new created.
-     * @param bool $verbose
+     * @param bool $verboseLogging
      */
     public function importCommand($icsCalendarUri = null, $pid = null, $deleteBeforeImport = false, $verboseLogging = false)
     {
