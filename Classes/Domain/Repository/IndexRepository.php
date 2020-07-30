@@ -435,13 +435,14 @@ class IndexRepository extends AbstractRepository
      */
     public function findDay(int $year, int $month, int $day)
     {
-        $startTime = \mktime(0, 0, 0, $month, $day, $year);
-        $startDate = new \DateTime('@' . $startTime);
-        $endDate = clone $startDate;
-        $endDate->modify('+1 day');
-        $endDate->modify('-1 second');
+		$startTime = mktime(0, 0, 0, $month, $day, $year);
+		$startDate = new \DateTime('@'.$startTime);
+		$startDate->modify('+1 day');
+		$endDate = clone $startDate;
+		$endDate->modify('+1 day');
+		$endDate->modify('-1 second');
 
-        return $this->findByTimeSlot($startDate->getTimestamp(), $endDate->getTimestamp());
+		return $this->findByTimeSlot($startDate->getTimestamp(), $endDate->getTimestamp());
     }
 
     /**
