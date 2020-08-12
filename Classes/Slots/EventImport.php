@@ -128,10 +128,12 @@ class EventImport
         $configuration->setAllDay(true);
 
         $startTime = clone $startDate;
+        $startDate->setTimezone(new \DateTimeZone('+0000'));
         $configuration->setStartDate(DateTimeUtility::resetTime($startDate));
         $endTime = clone $endDate;
+        $endDate->setTimezone(new \DateTimeZone('+0000'));
         $configuration->setEndDate(DateTimeUtility::resetTime($endDate));
-
+        
         $startTime = DateTimeUtility::getDaySecondsOfDateTime($startTime);
         if ($startTime > 0) {
             $configuration->setStartTime($startTime);
